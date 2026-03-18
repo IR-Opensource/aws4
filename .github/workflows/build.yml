@@ -1,45 +1,38 @@
-name: Node CI
+name: JS
 
-on: [ push, pull_request ]
+on:
+  workflow_dispatch:
 
-defaults:
-  run:
-    shell: bash
+permissions:
+  checks: write
+  contents: write
+  packages: read
+  actions: write
 
 jobs:
-
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node-version: [ 14.x, 16.x, 18.x, 20.x ]
-        # TODO: Do we really need to test on windows and macOS?
-        #       We don't even touch the filesystem, let OS stuff
-        # os: [ windows-latest, ubuntu-latest, macOS-latest ]
-        os: [ ubuntu-latest ]
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build Angular Project and Run PSE
 
     steps:
-    - name: Check out repo
-      uses: actions/checkout@v3
+      # Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      # Setup Node.js
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.11.0"
 
-    - name: Env
-      run: |
-        echo "Event name: ${{ github.event_name }}"
-        echo "Git ref:    ${{ github.ref }}"
-        echo "GH actor:   ${{ github.actor }}"
-        echo "SHA:        ${{ github.sha }}"
-        VER=`node --version`; echo "Node ver:   $VER"
-        VER=`npm --version`; echo "npm ver:    $VER"
+      # Install global tools
+      # - name: Install global tools
+      #   run: |
+      #     npm install -g @angular/cli
+      #     npm install -g yarn
+      #     npm install -g gulp-cli
 
-    - name: Install
-      run: npm install
 
-    - name: Test
-      run: npm test
-      env:
-        CI: true
+      # Install project dependencies
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
